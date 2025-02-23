@@ -118,13 +118,14 @@
     let userData = tg.initDataUnsafe.user;
     const submitButton = document.getElementById("submit");
     const originalButtonText = submitButton.innerHTML;
-    const keyword = document.getElementById("keyword").value.trim();
-    const specialCharRegex = /[^a-zA-Z0-9\s]/; // Allows letters, numbers, and spaces
         
     document.getElementById("submit").addEventListener("click", async () => {
         // Disable button and show loading state
         submitButton.disabled = true;
         submitButton.innerHTML = '<span class="spinner"></span> Loading...'; // You can also use a spinner icon here
+        
+    const keyword = document.getElementById("keyword").value.trim();
+    const specialCharRegex = /[^a-zA-Z0-9\s]/; // Allows letters, numbers, and spaces    
         
 if (!keyword) {
     tg.showPopup({
