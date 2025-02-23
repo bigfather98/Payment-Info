@@ -139,7 +139,7 @@ if (!keyword) {
     return;
 }
 
-if (specialCharRegex.test(keyword)) {
+if (!specialCharRegex.test(keyword)) {
     tg.showPopup({
         title: 'Error',
         message: 'Special characters are not allowed.',
