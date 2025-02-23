@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Telegram Web App</title>
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
+</head>
+
+<style>
+    body {
+        display: flex;
+        flex-direction: column;
+        font-family: Arial, sans-serif;
+        align-items: center;
+        background-color: #f4f4f4;
+        width: 100vw;
+        min-height: 100vh;
+        margin-left: 0px;
+        padding-left: 0px;
+        padding-top: 0px;
+        margin-top: 0px;
+        margin-right: 0px;
+        padding-right: 0px;
+    }
+
+    .shape {
+        position: inherit;
+        margin-left: 0px;
+  left: 0px;
+  top: 0px;
+  right: 0px;
+  width: 100%;
+  height: 20vh;
+  background: url(https://raw.githubusercontent.com/bigfather98/oljtestbot/refs/heads/main/OnlineJobsPH.png) no-repeat center center / cover;
+  border-radius: 0px;
+}
+
+    input {
+        font-size: 18px;
+        padding: 10px;
+        margin-top: 50px;
+        width: 60%;
+        border: 1px solid #ccc;
+        border-radius: 5px;
+    }
+
+    button {
+        font-size: 18px;
+        padding: 10px;
+        margin-top: 10px;
+        width: 60%;
+        background-color: #09afb8ff;
+        color: white;
+        border: none;
+        border-radius: 25px;
+        cursor: pointer;
+        align-text: center;
+    }
+    .spinner {
+        display: inline-block;
+        width: 20px;
+        height: 20px;
+        border: 3px solid rgba(255,255,255,.3);
+        border-radius: 50%;
+        border-top-color: #fff;
+        animation: spin 1s ease-in-out infinite;
+        vertical-align: middle; /* Align with text */
+        margin-right: 8px; /* Space between spinner and text */
+    }
+
+    /* Container for spinner and text */
+    .loading-container {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 8px;
+    }
+
+    @keyframes spin {
+        to { transform: rotate(360deg); }
+    }
+</style>
+<body>
+    <div class="shape"></div>
+    <input type="text" id="keyword" placeholder="Enter keyword...">
+    <button id="submit">Submit</button>
+
+    <script>
+    window.Telegram.WebApp.expand(); // Expand WebApp to full screen
+
+    const tg = window.Telegram.WebApp;
+    let userData = tg.initDataUnsafe.user;
+
+    document.getElementById("submit").addEventListener("click", async () => {
+        const submitButton = document.getElementById("submit");
+        const originalButtonText = submitButton.innerHTML;
+        
+        // Disable button and show loading state
+        submitButton.disabled = true;
+        submitButton.innerHTML = '<span class="spinner"></span> Loading...'; // You can also use a spinner icon here
+
+        const keyword = document.getElementById("keyword").value.trim();
+        if (!keyword) {
+            tg.showPopup({
+                title: 'Error',
+                message: 'Please enter a keyword.',
+                buttons: [{type: 'ok'}]
+            });
+            // Reset button state
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalButtonText;
+            return;
+        }
+
+        const chat_id = userData?.id;
+        if (!chat_id) {
+            tg.showPopup({
+                title: 'Error',
+                message: 'Could not get chat ID.',
+                buttons: [{type: 'ok'}]
+            });
+            // Reset button state
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalButtonText;
+            return;
+        }
+
+        const webhookUrl = "https://bot.kmonlinesolutions.com/webhook-test/3f74359a-a00a-4b04-b6b4-6952d3180b0d";
+
+        try {
+            const response = await fetch(webhookUrl, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ chat_id, keyword }),
+            });
+
+            if (response.ok) {
+                // Reset button state before alert
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalButtonText;
+                
+               tg.showPopup({
+                    title: 'Success',
+                    message: 'Keyword updated',
+                    buttons: [{type: 'ok'}]
+                });
+                
+                // Close the WebApp after a short delay
+                    tg.close();
+            } else {
+                throw new Error('Request failed');
+            }
+        } catch (error) {
+            console.error("Error:", error);
+            tg.showPopup({
+                title: 'Error',
+                message: 'Failed to send data. Click Ok and press Submit button again.',
+                buttons: [{type: 'Ok'}]
+            });
+            // Reset button state
+            submitButton.disabled = false;
+            submitButton.innerHTML = originalButtonText;
+        }
+    });
+</script>
+
+</body>
+</html>
