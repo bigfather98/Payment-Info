@@ -126,18 +126,29 @@
         submitButton.innerHTML = '<span class="spinner"></span> Loading...'; // You can also use a spinner icon here
 
         const keyword = document.getElementById("keyword").value.trim();
-        if (!keyword) {
-            tg.showPopup({
-                title: 'Error',
-                message: 'Please enter a keyword.',
-                buttons: [{type: 'ok'}]
-            });
-            // Reset button state
-            submitButton.disabled = false;
-            submitButton.innerHTML = originalButtonText;
-            return;
-        }
+        const specialCharRegex = /[^a-zA-Z0-9\s]/; // Allows letters, numbers, and spaces
 
+if (!keyword) {
+    tg.showPopup({
+        title: 'Error',
+        message: 'Please enter a keyword.',
+        buttons: [{ type: 'ok' }]
+    });
+    submitButton.disabled = false;
+    submitButton.innerHTML = originalButtonText;
+    return;
+}
+
+if (specialCharRegex.test(keyword)) {
+    tg.showPopup({
+        title: 'Error',
+        message: 'Special characters are not allowed.',
+        buttons: [{ type: 'ok' }]
+    });
+    submitButton.disabled = false;
+    submitButton.innerHTML = originalButtonText;
+    return;
+}
         const chat_id = userData?.id;
         if (!chat_id) {
             tg.showPopup({
