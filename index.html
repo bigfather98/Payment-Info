@@ -2,204 +2,467 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Telegram Web App</title>
-    <script src="https://telegram.org/js/telegram-web-app.js"></script>
-</head>
-
-<style>
-    body {
-        display: flex;
-        flex-direction: column;
-        font-family: Arial, sans-serif;
-        align-items: center;
-        background-color: #f4f4f4;
-        width: 100vw;
-        min-height: 100vh;
-        margin-left: 0px;
-        padding-left: 0px;
-        padding-top: 0px;
-        margin-top: 0px;
-        margin-right: 0px;
-        padding-right: 0px;
-    }
-
-    .shape {
-        position: inherit;
-        margin-left: 0px;
-        padding-left: 0px;
-        padding-top: 0px;
-        margin-top: 0px;
-        margin-right: 0px;
-        padding-right: 0px;
-  width: 100%;
-  height: 20vh;
-  background: url(https://raw.githubusercontent.com/bigfather98/OLJ-keyword/refs/heads/main/OnlineJobsPH.png) no-repeat center center / cover;
-  border-radius: 0px;
-}
-
-    input {
-        font-size: 18px;
-        padding: 10px;
-        margin-top: 40px;
-        width: 60%;
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        margin-bottom: 20px;
-    }
-
-    h2 {
-        font-size: 18px;
-        padding: 10px;
-        margin-top: 50px;
-        text-align: center;
-    } 
-    h3 {
-        font-size: 12px;
-        padding: 10px;
-        text-align: center;
-        color: gray;
-        margin-top: 0px;
-    } 
-
-    button {
-        font-size: 18px;
-        padding: 10px;
-        margin-top: 10px;
-        width: 60%;
-        background-color: #09afb8ff;
-        color: white;
-        border: none;
-        border-radius: 25px;
-        cursor: pointer;
-        align-text: center;
-    }
-    .spinner {
-        display: inline-block;
-        width: 20px;
-        height: 20px;
-        border: 3px solid rgba(255,255,255,.3);
-        border-radius: 50%;
-        border-top-color: #fff;
-        animation: spin 1s ease-in-out infinite;
-        vertical-align: middle; /* Align with text */
-        margin-right: 8px; /* Space between spinner and text */
-    }
-
-    /* Container for spinner and text */
-    .loading-container {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 8px;
-    }
-
-    @keyframes spin {
-        to { transform: rotate(360deg); }
-    }
-
-.center-placeholder::placeholder {
-            text-align: center;
-            display: block; /* Ensures the placeholder text respects the text alignment */
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>Subscription Details</title>
+    <!-- intl-tel-input CSS -->
+    <link
+      rel="stylesheet"
+      href="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/css/intlTelInput.css"
+      integrity="sha512-gxWow8Mo6q6pLa1XH/CcH8JyiSDEtiwJV78E+D+QP0EVasFs8wKXq16G8CLD4CJ2SnonHr4Lm/yY2fSI2+cbmw=="
+      crossorigin="anonymous"
+      referrerpolicy="no-referrer"
+    />
+    <style>
+        :root {
+            --primary-color: #09afb8; /* Teal color from kmbots / user example */
+            --input-border-color: #ced4da; /* Light grey border */
+            --background-color: #f8f9fa; /* Light grey background */
+            --text-color: #212529; /* Dark text color */
+            --button-text-color: #ffffff; /* White text */
+            --error-color: #dc3545; /* Bootstrap danger color */
+            --success-color: #198754; /* Bootstrap success color */
+            --warning-color: #ffc107; /* Bootstrap warning color */
         }
-    
-</style>
+
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+
+        html, body {
+            width: 100%;
+            min-height: 100%;
+            overflow-x: hidden;
+        }
+
+        body {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+            background-color: var(--background-color);
+            color: var(--text-color);
+            padding: 20px;
+        }
+
+        .form-container {
+            width: 100%;
+            max-width: 500px;
+            background-color: #ffffff;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            margin-top: 20px;
+        }
+
+        h2 {
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin-bottom: 25px;
+            text-align: center;
+            color: var(--text-color);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            font-size: 0.9rem;
+        }
+
+        /* Style for the required asterisk */
+        label .required-asterisk {
+            color: var(--error-color); /* Use the error color (red) */
+            font-weight: bold;
+            margin-left: 4px; /* Add a small space before the asterisk */
+        }
+
+        input[type="text"],
+        input[type="email"],
+        input[type="tel"] {
+            width: 100%;
+            padding: 12px 15px;
+            font-size: 1rem;
+            border: 1px solid var(--input-border-color);
+            border-radius: 5px;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
+        }
+
+        .intl-tel-input {
+            width: 100%;
+        }
+
+        input:focus {
+            border-color: var(--primary-color);
+            outline: none;
+            box-shadow: 0 0 0 2px rgba(9, 175, 184, 0.25);
+        }
+
+         .intl-tel-input.iti-focused .form-control {
+             border-color: var(--primary-color) !important;
+             box-shadow: 0 0 0 2px rgba(9, 175, 184, 0.25) !important;
+         }
+
+        button#submit {
+            font-size: 1.1rem;
+            font-weight: 500;
+            padding: 12px 20px;
+            margin-top: 15px;
+            width: 100%;
+            background-color: var(--primary-color);
+            color: var(--button-text-color);
+            border: none;
+            border-radius: 25px;
+            cursor: pointer;
+            transition: background-color 0.2s ease-in-out, opacity 0.2s ease-in-out;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        button#submit:hover {
+            background-color: #078a91;
+        }
+
+        button#submit:disabled {
+            opacity: 0.7;
+            cursor: not-allowed;
+        }
+
+        .spinner {
+            display: inline-block;
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, .3);
+            border-radius: 50%;
+            border-top-color: var(--button-text-color);
+            animation: spin 1s ease-in-out infinite;
+            vertical-align: middle;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .error-message {
+            color: var(--error-color);
+            font-size: 0.8rem;
+            margin-top: 5px;
+            display: block;
+            min-height: 1em;
+        }
+        input.invalid {
+            border-color: var(--error-color);
+        }
+        input:invalid {
+            box-shadow: none;
+        }
+
+        #status-message {
+            margin-top: 15px;
+            padding: 10px;
+            border-radius: 5px;
+            font-size: 0.9rem;
+            text-align: center;
+            display: none; /* Hidden by default */
+        }
+        #status-message.success {
+            background-color: #d1e7dd;
+            color: var(--success-color);
+            border: 1px solid #badbcc;
+            display: block;
+        }
+        #status-message.error {
+            background-color: #f8d7da;
+            color: var(--error-color);
+            border: 1px solid #f5c2c7;
+            display: block;
+        }
+        #status-message.warning {
+             background-color: #fff3cd;
+             color: #664d03;
+             border: 1px solid #ffecb5;
+             display: block;
+        }
+
+    </style>
+</head>
 <body>
-    <div class="shape"></div>
-    <h2>OLJ only supports an "exact match" keyword. Use 1 word for better search result.</h2>
-    <h3>Example: "VA" or "virtual" for Virtual Assistant jobs</h3>
-    <input type="text" id="keyword" class="center-placeholder" placeholder="Enter 1 keyword only...">
-    <button id="submit">Submit</button>
+
+    <div class="form-container" id="main-form-container">
+        <h2>Subscription Details</h2>
+        <form id="subscription-form" novalidate>
+            <div class="form-group">
+                <!-- Added span with asterisk -->
+                <label for="first-name">First Name<span class="required-asterisk">*</span></label>
+                <input type="text" id="first-name" name="firstName" placeholder="Enter your first name" required>
+                <span class="error-message" id="first-name-error"></span>
+            </div>
+
+            <div class="form-group">
+                <!-- Added span with asterisk -->
+                <label for="last-name">Last Name<span class="required-asterisk">*</span></label>
+                <input type="text" id="last-name" name="lastName" placeholder="Enter your last name" required>
+                 <span class="error-message" id="last-name-error"></span>
+            </div>
+
+            <div class="form-group">
+                <!-- Added span with asterisk -->
+                <label for="mobile-input">Mobile Number<span class="required-asterisk">*</span></label>
+                <input type="tel" id="mobile-input" name="mobileNumber" required>
+                <span class="error-message" id="mobile-error"></span>
+            </div>
+
+            <div class="form-group">
+                <!-- Added span with asterisk -->
+                <label for="email">Email<span class="required-asterisk">*</span></label>
+                <input type="email" id="email" name="email" placeholder="Enter your email address" required>
+                 <span class="error-message" id="email-error"></span>
+            </div>
+
+            <button type="button" id="submit">Submit Details</button>
+
+            <div id="status-message"></div>
+        </form>
+    </div>
+
+    <!-- jQuery -->
+    <script
+        src="https://cdnjs.cloudflare.com/ajax/libs/jquery/3.6.0/jquery.min.js"
+        integrity="sha512-894YE6QWD5I59HgZOGReFYm4dnWc1Qt5NtvYSaNcOP+u1T9qYdvdihz0PPSiiqn/+/3e7Jo4EaG7TubfWGUrMQ=="
+        crossorigin="anonymous"
+        referrerpolicy="no-referrer"
+    ></script>
+    <!-- intl-tel-input JavaScript -->
+    <script
+      src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/intlTelInput.min.js"
+      referrerpolicy="no-referrer"
+    ></script>
+    <!-- utilsScript -->
+     <script
+       src="https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/utils.js"
+       referrerpolicy="no-referrer"
+     ></script>
 
     <script>
-    window.Telegram.WebApp.expand(); // Expand WebApp to full screen
+        // --- Global variable to store chat ID ---
+        let chatIdFromUrl = null;
 
-    const tg = window.Telegram.WebApp;
-    let userData = tg.initDataUnsafe.user;
-    const submitButton = document.getElementById("submit");
-    const originalButtonText = submitButton.innerHTML;
-        
-    document.getElementById("submit").addEventListener("click", async () => {
-        // Disable button and show loading state
-        submitButton.disabled = true;
-        submitButton.innerHTML = '<span class="spinner"></span> Loading...'; // You can also use a spinner icon here
-        
-    const keyword = document.getElementById("keyword").value.trim();
-    const specialCharRegex = /[^a-zA-Z0-9\s]/; // Allows letters, numbers, and spaces    
-        
-if (!keyword) {
-    tg.showPopup({
-        title: 'Error',
-        message: 'Please enter a keyword.',
-        buttons: [{ type: 'ok' }]
-    });
-    submitButton.disabled = false;
-    submitButton.innerHTML = originalButtonText;
-    return;
-}
-
-if (specialCharRegex.test(keyword)) {
-    tg.showPopup({
-        title: 'Error',
-        message: 'Special characters are not allowed.',
-        buttons: [{ type: 'ok' }]
-    });
-    submitButton.disabled = false;
-    submitButton.innerHTML = originalButtonText;
-    return;
-}
-        
-        const chat_id = userData?.id;
-        if (!chat_id) {
-            tg.showPopup({
-                title: 'Error',
-                message: 'Could not get chat ID.',
-                buttons: [{type: 'ok'}]
-            });
-            // Reset button state
-            submitButton.disabled = false;
-            submitButton.innerHTML = originalButtonText;
-            return;
-        }
-
-        const webhookUrl = "https://n8n.kmonlinesolutions.com/webhook/3f74359a-a00a-4b04-b6b4-6952d3180b0d";
-
+        // --- Get chat_id from URL query parameter on page load ---
         try {
-            const response = await fetch(webhookUrl, {
-                method: "POST",
-                headers: { "Content-Type": "application/json" },
-                body: JSON.stringify({ chat_id, keyword }),
-            });
-
-            if (response.ok) {
-                // Reset button state before alert
-                submitButton.disabled = false;
-                submitButton.innerHTML = originalButtonText;
-                
-               tg.showPopup({
-                    title: 'Success',
-                    message: 'Keyword updated',
-                    buttons: [{type: 'ok'}]
-                });
-                
-                // Close the WebApp after a short delay
-                    tg.close();
+            const queryParams = new URLSearchParams(window.location.search);
+            chatIdFromUrl = queryParams.get('chat_id');
+            if (chatIdFromUrl) {
+                console.log("Telegram Chat ID found in URL:", chatIdFromUrl);
             } else {
-                throw new Error('Request failed');
+                console.warn("Telegram Chat ID not found in URL parameters. Please access this page via the Telegram bot button.");
+                const statusDiv = document.getElementById('status-message');
+                 statusDiv.textContent = 'Warning: User context missing. Please access this page via the Telegram bot button.';
+                 statusDiv.className = 'warning';
+                 // document.getElementById('submit').disabled = true; // Optionally disable
             }
-        } catch (error) {
-            console.error("Error:", error);
-            tg.showPopup({
-                title: 'Error',
-                message: 'Failed to send data. Click Ok and press Submit button again.',
-                buttons: [{type: 'Ok'}]
-            });
-            // Reset button state
-            submitButton.disabled = false;
-            submitButton.innerHTML = originalButtonText;
+        } catch (e) {
+            console.error("Error parsing URL parameters:", e);
+            const statusDiv = document.getElementById('status-message');
+            statusDiv.textContent = 'Error reading page parameters.';
+            statusDiv.className = 'error';
+            document.getElementById('submit').disabled = true;
         }
-    });
-</script>
 
+        // --- Input Elements ---
+        const firstNameInput = document.getElementById('first-name');
+        const lastNameInput = document.getElementById('last-name');
+        const emailInput = document.getElementById('email');
+        const mobileInput = document.getElementById('mobile-input');
+        const submitButton = document.getElementById('submit');
+        const originalButtonHTML = submitButton.innerHTML;
+        const statusMessageDiv = document.getElementById('status-message');
+
+        // --- Error Span Elements ---
+        const firstNameError = document.getElementById('first-name-error');
+        const lastNameError = document.getElementById('last-name-error');
+        const emailError = document.getElementById('email-error');
+        const mobileError = document.getElementById('mobile-error');
+
+        // --- Variable to hold the intl-tel-input instance ---
+        let itiInstance = null;
+
+        // --- Use jQuery's ready function to ensure DOM is ready ---
+        $(document).ready(function() {
+            if (typeof window.intlTelInput === 'function') {
+                try {
+                    itiInstance = window.intlTelInput(mobileInput, {
+                        initialCountry: "ph",
+                        separateDialCode: true,
+                        utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/utils.js",
+                        preferredCountries: ['ph', 'us', 'gb', 'au', 'sg', 'ae'],
+                        nationalMode: false,
+                        placeholderNumberType: "MOBILE",
+                        autoPlaceholder: "polite"
+                    });
+                    console.log("intl-tel-input initialized successfully.");
+                } catch (error) {
+                    console.error("Error initializing intl-tel-input:", error);
+                    mobileError.textContent = 'Phone input failed to load.';
+                    alert('Error: Could not initialize phone input component. Please reload.');
+                    submitButton.disabled = true;
+                }
+            } else {
+                console.error("intlTelInput function not found. Check script loading order and network.");
+                mobileError.textContent = 'Phone library failed to load.';
+                alert('Error: Failed to load phone input library. Please check your connection or try again later.');
+                 submitButton.disabled = true;
+                 submitButton.textContent = 'Phone input error';
+            }
+        });
+
+        // --- Clear Error Function ---
+        function clearError(inputElement, errorElement) {
+            if (errorElement) {
+                errorElement.textContent = '';
+            }
+            if (inputElement) {
+                inputElement.classList.remove('invalid');
+            }
+             if (statusMessageDiv.classList.contains('success') || statusMessageDiv.classList.contains('error')) {
+                 statusMessageDiv.style.display = 'none';
+                 statusMessageDiv.className = '';
+             }
+        }
+
+        // --- Validation Function ---
+        function validateForm() {
+            let isValid = true;
+            clearError(firstNameInput, firstNameError);
+            clearError(lastNameInput, lastNameError);
+            clearError(emailInput, emailError);
+            clearError(mobileInput, mobileError);
+
+            if (!chatIdFromUrl) {
+                 alert("Error: Cannot submit form. User information is missing. Please access this page via the button in your Telegram bot.");
+                 submitButton.disabled = true;
+                 return false;
+            }
+
+            function showError(inputElement, errorElement, message) {
+                isValid = false;
+                if (errorElement) {
+                    errorElement.textContent = message;
+                }
+                if (inputElement) {
+                    inputElement.classList.add('invalid');
+                }
+            }
+
+            if (!firstNameInput.value.trim()) {
+                showError(firstNameInput, firstNameError, 'First Name is required.');
+            }
+            if (!lastNameInput.value.trim()) {
+                showError(lastNameInput, lastNameError, 'Last Name is required.');
+            }
+
+            const mobileNumberValue = mobileInput.value.trim();
+            if (!itiInstance) {
+                showError(mobileInput, mobileError, 'Phone input component not loaded.');
+            } else if (!mobileNumberValue) {
+                 showError(mobileInput, mobileError, 'Mobile Number is required.');
+             } else if (!itiInstance.isValidNumber()) {
+                const errorCode = itiInstance.getValidationError();
+                const errorMap = ["Invalid number", "Invalid country code", "Too short", "Too long", "Invalid number"];
+                const message = errorMap[errorCode] || "Invalid mobile number format.";
+                showError(mobileInput, mobileError, message);
+             }
+
+            if (!emailInput.value.trim()) {
+                showError(emailInput, emailError, 'Email is required.');
+            } else if (!/\S+@\S+\.\S+/.test(emailInput.value.trim())) {
+                showError(emailInput, emailError, 'Please enter a valid email address.');
+            }
+
+            if (!isValid) {
+                const firstErrorElement = document.querySelector('.error-message:not(:empty)');
+                const firstErrorMessage = firstErrorElement ? firstErrorElement.textContent : 'Please fill in all required fields correctly.';
+                alert(`Validation Error: ${firstErrorMessage}`);
+            }
+
+            return isValid;
+        }
+
+        // --- Submit Button Event Listener ---
+        submitButton.addEventListener('click', async () => {
+            if (statusMessageDiv.classList.contains('success') || statusMessageDiv.classList.contains('error')) {
+                 statusMessageDiv.style.display = 'none';
+                 statusMessageDiv.className = '';
+             }
+
+            if (!validateForm()) {
+                return;
+            }
+
+            if (!itiInstance) {
+                 alert('Error: Phone input component is not ready. Please wait or reload.');
+                return;
+            }
+
+            submitButton.disabled = true;
+            submitButton.innerHTML = `<span class="spinner"></span> Processing...`;
+
+            const firstName = firstNameInput.value.trim();
+            const lastName = lastNameInput.value.trim();
+            const email = emailInput.value.trim();
+            const fullMobile = itiInstance.getNumber();
+
+            const dataToSend = {
+                firstName: firstName,
+                lastName: lastName,
+                mobile: fullMobile,
+                email: email,
+                telegram_chat_id: chatIdFromUrl
+            };
+
+            const webhookUrl = "https://n8n.kmonlinesolutions.com/webhook-test/payment-info"; // <--- IMPORTANT: REPLACE THIS
+
+
+            try {
+                const response = await fetch(webhookUrl, {
+                    method: "POST",
+                    headers: {
+                        "Content-Type": "application/json"
+                    },
+                    body: JSON.stringify(dataToSend),
+                });
+
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalButtonHTML;
+
+                if (response.ok) {
+                    console.log("Submission successful");
+                    statusMessageDiv.textContent = 'Your details have been submitted successfully!';
+                    statusMessageDiv.className = 'success';
+                    // document.getElementById('subscription-form').reset(); // Optional clear form
+                    // if (itiInstance) itiInstance.setNumber(""); // Optional clear phone
+                } else {
+                    const responseText = await response.text();
+                    console.error("Webhook response error:", response.status, responseText);
+                    const displayError = `Failed to submit details (Status: ${response.status}). Please try again later. ${responseText ? '('+responseText.substring(0, 100)+')' : ''}`;
+                    statusMessageDiv.textContent = displayError;
+                    statusMessageDiv.className = 'error';
+                }
+            } catch (error) {
+                console.error("Error sending data:", error);
+                 submitButton.disabled = false;
+                 submitButton.innerHTML = originalButtonHTML;
+                 const networkErrorMsg = 'Network Error: Could not connect to the server. Check your connection and try again.';
+                 statusMessageDiv.textContent = networkErrorMsg;
+                 statusMessageDiv.className = 'error';
+            }
+        });
+    </script>
 </body>
 </html>
