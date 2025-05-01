@@ -22,6 +22,7 @@
             --error-color: #dc3545; /* Red */
             --success-color: #198754; /* Green */
             --warning-color: #ffc107; /* Yellow */
+            --info-color: #0dcaf0; /* Light blue for info */
         }
 
         * {
@@ -59,9 +60,18 @@
         h2 {
             font-size: 1.5rem;
             font-weight: 500;
-            margin-bottom: 25px;
+            margin-bottom: 10px; /* Reduced margin */
             text-align: center;
             color: var(--text-color);
+        }
+
+        /* Style for displaying selected subscription */
+        #subscription-info {
+            text-align: center;
+            margin-bottom: 20px;
+            font-size: 1rem;
+            font-weight: 500;
+            color: var(--primary-color); /* Teal color */
         }
 
         .form-group {
@@ -107,38 +117,36 @@
              box-shadow: 0 0 0 2px rgba(9, 175, 184, 0.25) !important;
          }
 
-        /* Payment Method Styles */
         .payment-options-container {
             display: flex;
-            flex-wrap: wrap; /* Allow wrapping on smaller screens */
-            gap: 15px; /* Space between images */
+            flex-wrap: wrap;
+            gap: 15px;
             margin-top: 5px;
         }
 
         .payment-option {
-            height: 40px; /* Adjust height as needed */
-            width: auto; /* Maintain aspect ratio */
-            border: 2px solid transparent; /* Placeholder for border */
+            height: 40px;
+            width: auto;
+            border: 2px solid transparent;
             border-radius: 5px;
             cursor: pointer;
             transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, transform 0.1s ease;
         }
          .payment-option:hover {
-             transform: scale(1.05); /* Slight zoom on hover */
+             transform: scale(1.05);
          }
 
         .payment-option.selected {
             border-color: var(--primary-color);
-            box-shadow: 0 0 8px rgba(9, 175, 184, 0.6); /* Glow effect */
-            transform: scale(1.05); /* Keep zoom when selected */
+            box-shadow: 0 0 8px rgba(9, 175, 184, 0.6);
+            transform: scale(1.05);
         }
-
 
         button#submit {
             font-size: 1.1rem;
             font-weight: 500;
             padding: 12px 20px;
-            margin-top: 25px; /* Increased margin top */
+            margin-top: 25px;
             width: 100%;
             background-color: var(--primary-color);
             color: var(--button-text-color);
@@ -223,6 +231,9 @@
 
     <div class="form-container" id="main-form-container">
         <h2>Subscription Details</h2>
+        <!-- Element to display the selected subscription type -->
+        <p id="subscription-info">Loading subscription details...</p>
+
         <form id="subscription-form" novalidate>
             <div class="form-group">
                 <label for="first-name">First Name<span class="required-asterisk">*</span></label>
@@ -285,32 +296,12 @@
      ></script>
 
     <script>
-        // --- Global variable to store chat ID ---
+        // --- Global variables ---
         let chatIdFromUrl = null;
-        let selectedPaymentMethod = null; // Variable to store the selected payment method value
+        let subscriptionTypeFromUrl = null; // Variable for subscription type
+        let selectedPaymentMethod = null;
 
-        // --- Get chat_id from URL query parameter on page load ---
-        try {
-            const queryParams = new URLSearchParams(window.location.search);
-            chatIdFromUrl = queryParams.get('chat_id');
-            if (chatIdFromUrl) {
-                console.log("Telegram Chat ID found in URL:", chatIdFromUrl);
-            } else {
-                console.warn("Telegram Chat ID not found in URL parameters. Please access this page via the Telegram bot button.");
-                const statusDiv = document.getElementById('status-message');
-                 statusDiv.textContent = 'Warning: User context missing. Please access this page via the Telegram bot button.';
-                 statusDiv.className = 'warning';
-                 // document.getElementById('submit').disabled = true; // Optionally disable
-            }
-        } catch (e) {
-            console.error("Error parsing URL parameters:", e);
-            const statusDiv = document.getElementById('status-message');
-            statusDiv.textContent = 'Error reading page parameters.';
-            statusDiv.className = 'error';
-            document.getElementById('submit').disabled = true;
-        }
-
-        // --- Input Elements ---
+        // --- Elements ---
         const firstNameInput = document.getElementById('first-name');
         const lastNameInput = document.getElementById('last-name');
         const emailInput = document.getElementById('email');
@@ -318,17 +309,82 @@
         const submitButton = document.getElementById('submit');
         const originalButtonHTML = submitButton.innerHTML;
         const statusMessageDiv = document.getElementById('status-message');
-        const paymentOptions = document.querySelectorAll('.payment-option'); // Get all payment images
+        const paymentOptions = document.querySelectorAll('.payment-option');
+        const subscriptionInfoP = document.getElementById('subscription-info'); // Get the new paragraph
 
         // --- Error Span Elements ---
         const firstNameError = document.getElementById('first-name-error');
         const lastNameError = document.getElementById('last-name-error');
         const emailError = document.getElementById('email-error');
         const mobileError = document.getElementById('mobile-error');
-        const paymentError = document.getElementById('payment-error'); // Error span for payment method
+        const paymentError = document.getElementById('payment-error');
 
         // --- Variable to hold the intl-tel-input instance ---
         let itiInstance = null;
+
+
+        // --- Function to display parameter warnings/info ---
+        function checkAndDisplayParams() {
+            let paramsOk = true;
+            let initialWarningMsg = '';
+
+            try {
+                const queryParams = new URLSearchParams(window.location.search);
+                chatIdFromUrl = queryParams.get('chat_id');
+                subscriptionTypeFromUrl = queryParams.get('subscription_type'); // Get subscription type
+
+                if (!chatIdFromUrl) {
+                    console.warn("Telegram Chat ID not found in URL.");
+                    initialWarningMsg += 'User context missing. ';
+                    paramsOk = false;
+                } else {
+                     console.log("Telegram Chat ID found:", chatIdFromUrl);
+                }
+
+                if (!subscriptionTypeFromUrl) {
+                    console.warn("Subscription type not found in URL.");
+                     initialWarningMsg += 'Subscription type missing. ';
+                     paramsOk = false;
+                     subscriptionInfoP.textContent = 'Error: Subscription type not specified!';
+                     subscriptionInfoP.style.color = 'var(--error-color)';
+                } else {
+                     console.log("Subscription type found:", subscriptionTypeFromUrl);
+                     // Display the subscription type to the user
+                     let displayText = subscriptionTypeFromUrl.replace('-', ' '); // e.g., "30 days" or "6 months"
+                     subscriptionInfoP.textContent = `Selected Plan: ${displayText}`;
+                     subscriptionInfoP.style.color = 'var(--primary-color)'; // Reset color if previously error
+                }
+
+                if (!paramsOk) {
+                    initialWarningMsg += 'Please access this page via the correct Telegram bot button.';
+                    statusMessageDiv.textContent = initialWarningMsg;
+                    statusMessageDiv.className = 'warning';
+                    // Optionally disable submit button if params are missing
+                    // submitButton.disabled = true;
+                } else {
+                     // If params were OK, clear any initial warning that might be there
+                     if (statusMessageDiv.classList.contains('warning')) {
+                        statusMessageDiv.style.display = 'none';
+                        statusMessageDiv.className = '';
+                     }
+                }
+
+
+            } catch (e) {
+                console.error("Error parsing URL parameters:", e);
+                statusMessageDiv.textContent = 'Error reading page parameters.';
+                statusMessageDiv.className = 'error';
+                subscriptionInfoP.textContent = 'Error loading page details!';
+                subscriptionInfoP.style.color = 'var(--error-color)';
+                submitButton.disabled = true; // Disable submit on critical error
+                paramsOk = false;
+            }
+            return paramsOk;
+        }
+
+        // --- Call parameter check on page load ---
+        const paramsAreValid = checkAndDisplayParams();
+
 
         // --- Use jQuery's ready function to ensure DOM is ready ---
         $(document).ready(function() {
@@ -362,17 +418,10 @@
             // Add click listeners for payment options
             paymentOptions.forEach(option => {
                 option.addEventListener('click', function() {
-                    // Store the selected payment method's value
                     selectedPaymentMethod = this.dataset.paymentMethod;
                     console.log("Selected Payment Method:", selectedPaymentMethod);
-
-                    // Remove 'selected' class from all options
                     paymentOptions.forEach(opt => opt.classList.remove('selected'));
-
-                    // Add 'selected' class to the clicked option
                     this.classList.add('selected');
-
-                    // Clear payment error if one was shown
                     clearError(null, paymentError);
                 });
             });
@@ -386,6 +435,7 @@
             if (inputElement) {
                 inputElement.classList.remove('invalid');
             }
+             // Only clear dynamic success/error messages, not the initial warning
              if (statusMessageDiv.classList.contains('success') || statusMessageDiv.classList.contains('error')) {
                  statusMessageDiv.style.display = 'none';
                  statusMessageDiv.className = '';
@@ -401,8 +451,9 @@
             clearError(mobileInput, mobileError);
             clearError(null, paymentError); // Clear payment error span
 
-            if (!chatIdFromUrl) {
-                 alert("Error: Cannot submit form. User information is missing. Please access this page via the button in your Telegram bot.");
+            // Re-check required parameters on submit attempt
+            if (!chatIdFromUrl || !subscriptionTypeFromUrl) {
+                 alert("Error: Cannot submit form. User or subscription information is missing. Please access this page again via the correct button in your Telegram bot.");
                  submitButton.disabled = true;
                  return false;
             }
@@ -445,9 +496,8 @@
 
             // Payment Method Validation
             if (!selectedPaymentMethod) {
-                showError(null, paymentError, 'Please select a payment method.'); // Show error in payment span
+                showError(null, paymentError, 'Please select a payment method.');
             }
-
 
             if (!isValid) {
                 const firstErrorElement = document.querySelector('.error-message:not(:empty)');
@@ -460,13 +510,14 @@
 
         // --- Submit Button Event Listener ---
         submitButton.addEventListener('click', async () => {
+            // Clear previous submission status messages
             if (statusMessageDiv.classList.contains('success') || statusMessageDiv.classList.contains('error')) {
                  statusMessageDiv.style.display = 'none';
                  statusMessageDiv.className = '';
              }
 
             if (!validateForm()) {
-                return; // Validation includes chat_id and payment method checks now
+                return; // Validation includes chat_id and subscription type checks now
             }
 
             if (!itiInstance) {
@@ -482,19 +533,20 @@
             const email = emailInput.value.trim();
             const fullMobile = itiInstance.getNumber();
 
-            // --- Prepare data for webhook - INCLUDING payment method ---
+            // --- Prepare data for webhook - INCLUDING subscription type ---
             const dataToSend = {
                 firstName: firstName,
                 lastName: lastName,
                 mobile: fullMobile,
                 email: email,
-                paymentMethod: selectedPaymentMethod, // Add the selected payment method
+                paymentMethod: selectedPaymentMethod,
+                subscriptionType: subscriptionTypeFromUrl, // Add the captured subscription type
                 telegram_chat_id: chatIdFromUrl
             };
 
             // --- Define your N8N Webhook URL ---
-            const webhookUrl = "https://n8n.kmonlinesolutions.com/webhook-test/payment-info"; // Set your actual URL
-             if (webhookUrl === "YOUR_N8N_WEBHOOK_URL_HERE") { // Keep check in case URL is accidentally reset
+            const webhookUrl = "https://n8n.kmonlinesolutions.com/webhook-test/payment-info";
+             if (!webhookUrl || webhookUrl === "YOUR_N8N_WEBHOOK_URL_HERE") { // Simplified check
                  alert('Configuration Error: Webhook URL is not set correctly in the HTML code.');
                  submitButton.disabled = false;
                  submitButton.innerHTML = originalButtonHTML;
@@ -517,11 +569,7 @@
                     console.log("Submission successful");
                     statusMessageDiv.textContent = 'Your details have been submitted successfully!';
                     statusMessageDiv.className = 'success';
-                    // document.getElementById('subscription-form').reset(); // Optional clear form
-                    // if (itiInstance) itiInstance.setNumber(""); // Optional clear phone
-                    // Clear payment selection maybe?
-                    // paymentOptions.forEach(opt => opt.classList.remove('selected'));
-                    // selectedPaymentMethod = null;
+                    // Optionally clear form/selection
                 } else {
                     const responseText = await response.text();
                     console.error("Webhook response error:", response.status, responseText);
