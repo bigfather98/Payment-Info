@@ -14,14 +14,14 @@
     />
     <style>
         :root {
-            --primary-color: #09afb8; /* Teal color from kmbots / user example */
-            --input-border-color: #ced4da; /* Light grey border */
-            --background-color: #f8f9fa; /* Light grey background */
-            --text-color: #212529; /* Dark text color */
-            --button-text-color: #ffffff; /* White text */
-            --error-color: #dc3545; /* Bootstrap danger color */
-            --success-color: #198754; /* Bootstrap success color */
-            --warning-color: #ffc107; /* Bootstrap warning color */
+            --primary-color: #09afb8; /* Teal color */
+            --input-border-color: #ced4da;
+            --background-color: #f8f9fa;
+            --text-color: #212529;
+            --button-text-color: #ffffff;
+            --error-color: #dc3545; /* Red */
+            --success-color: #198754; /* Green */
+            --warning-color: #ffc107; /* Yellow */
         }
 
         * {
@@ -75,11 +75,10 @@
             font-size: 0.9rem;
         }
 
-        /* Style for the required asterisk */
         label .required-asterisk {
-            color: var(--error-color); /* Use the error color (red) */
+            color: var(--error-color);
             font-weight: bold;
-            margin-left: 4px; /* Add a small space before the asterisk */
+            margin-left: 4px;
         }
 
         input[type="text"],
@@ -108,11 +107,38 @@
              box-shadow: 0 0 0 2px rgba(9, 175, 184, 0.25) !important;
          }
 
+        /* Payment Method Styles */
+        .payment-options-container {
+            display: flex;
+            flex-wrap: wrap; /* Allow wrapping on smaller screens */
+            gap: 15px; /* Space between images */
+            margin-top: 5px;
+        }
+
+        .payment-option {
+            height: 40px; /* Adjust height as needed */
+            width: auto; /* Maintain aspect ratio */
+            border: 2px solid transparent; /* Placeholder for border */
+            border-radius: 5px;
+            cursor: pointer;
+            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out, transform 0.1s ease;
+        }
+         .payment-option:hover {
+             transform: scale(1.05); /* Slight zoom on hover */
+         }
+
+        .payment-option.selected {
+            border-color: var(--primary-color);
+            box-shadow: 0 0 8px rgba(9, 175, 184, 0.6); /* Glow effect */
+            transform: scale(1.05); /* Keep zoom when selected */
+        }
+
+
         button#submit {
             font-size: 1.1rem;
             font-weight: 500;
             padding: 12px 20px;
-            margin-top: 15px;
+            margin-top: 25px; /* Increased margin top */
             width: 100%;
             background-color: var(--primary-color);
             color: var(--button-text-color);
@@ -199,31 +225,39 @@
         <h2>Subscription Details</h2>
         <form id="subscription-form" novalidate>
             <div class="form-group">
-                <!-- Added span with asterisk -->
                 <label for="first-name">First Name<span class="required-asterisk">*</span></label>
                 <input type="text" id="first-name" name="firstName" placeholder="Enter your first name" required>
                 <span class="error-message" id="first-name-error"></span>
             </div>
 
             <div class="form-group">
-                <!-- Added span with asterisk -->
                 <label for="last-name">Last Name<span class="required-asterisk">*</span></label>
                 <input type="text" id="last-name" name="lastName" placeholder="Enter your last name" required>
                  <span class="error-message" id="last-name-error"></span>
             </div>
 
             <div class="form-group">
-                <!-- Added span with asterisk -->
                 <label for="mobile-input">Mobile Number<span class="required-asterisk">*</span></label>
                 <input type="tel" id="mobile-input" name="mobileNumber" required>
                 <span class="error-message" id="mobile-error"></span>
             </div>
 
             <div class="form-group">
-                <!-- Added span with asterisk -->
                 <label for="email">Email<span class="required-asterisk">*</span></label>
                 <input type="email" id="email" name="email" placeholder="Enter your email address" required>
                  <span class="error-message" id="email-error"></span>
+            </div>
+
+            <!-- Payment Method Selection -->
+            <div class="form-group">
+                <label>Select Payment Method<span class="required-asterisk">*</span></label>
+                <div class="payment-options-container">
+                    <img src="https://enstack.ph/assets/images/visa_mop.png" alt="Visa/Mastercard Credit Card" class="payment-option" data-payment-method="Credit Card">
+                    <img src="https://enstack.ph/assets/images/gcash_mop.png" alt="GCash" class="payment-option" data-payment-method="GCash">
+                    <img src="https://enstack.ph/assets/images/maya_mop.png" alt="Maya" class="payment-option" data-payment-method="Maya">
+                    <img src="https://enstack.ph/assets/images/qrph_mop.png" alt="QR Ph" class="payment-option" data-payment-method="QRph">
+                 </div>
+                 <span class="error-message" id="payment-error"></span>
             </div>
 
             <button type="button" id="submit">Submit Details</button>
@@ -253,6 +287,7 @@
     <script>
         // --- Global variable to store chat ID ---
         let chatIdFromUrl = null;
+        let selectedPaymentMethod = null; // Variable to store the selected payment method value
 
         // --- Get chat_id from URL query parameter on page load ---
         try {
@@ -283,18 +318,21 @@
         const submitButton = document.getElementById('submit');
         const originalButtonHTML = submitButton.innerHTML;
         const statusMessageDiv = document.getElementById('status-message');
+        const paymentOptions = document.querySelectorAll('.payment-option'); // Get all payment images
 
         // --- Error Span Elements ---
         const firstNameError = document.getElementById('first-name-error');
         const lastNameError = document.getElementById('last-name-error');
         const emailError = document.getElementById('email-error');
         const mobileError = document.getElementById('mobile-error');
+        const paymentError = document.getElementById('payment-error'); // Error span for payment method
 
         // --- Variable to hold the intl-tel-input instance ---
         let itiInstance = null;
 
         // --- Use jQuery's ready function to ensure DOM is ready ---
         $(document).ready(function() {
+            // Initialize intl-tel-input
             if (typeof window.intlTelInput === 'function') {
                 try {
                     itiInstance = window.intlTelInput(mobileInput, {
@@ -320,7 +358,25 @@
                  submitButton.disabled = true;
                  submitButton.textContent = 'Phone input error';
             }
-        });
+
+            // Add click listeners for payment options
+            paymentOptions.forEach(option => {
+                option.addEventListener('click', function() {
+                    // Store the selected payment method's value
+                    selectedPaymentMethod = this.dataset.paymentMethod;
+                    console.log("Selected Payment Method:", selectedPaymentMethod);
+
+                    // Remove 'selected' class from all options
+                    paymentOptions.forEach(opt => opt.classList.remove('selected'));
+
+                    // Add 'selected' class to the clicked option
+                    this.classList.add('selected');
+
+                    // Clear payment error if one was shown
+                    clearError(null, paymentError);
+                });
+            });
+        }); // <-- End of $(document).ready()
 
         // --- Clear Error Function ---
         function clearError(inputElement, errorElement) {
@@ -343,6 +399,7 @@
             clearError(lastNameInput, lastNameError);
             clearError(emailInput, emailError);
             clearError(mobileInput, mobileError);
+            clearError(null, paymentError); // Clear payment error span
 
             if (!chatIdFromUrl) {
                  alert("Error: Cannot submit form. User information is missing. Please access this page via the button in your Telegram bot.");
@@ -360,6 +417,7 @@
                 }
             }
 
+            // Field validations
             if (!firstNameInput.value.trim()) {
                 showError(firstNameInput, firstNameError, 'First Name is required.');
             }
@@ -385,6 +443,12 @@
                 showError(emailInput, emailError, 'Please enter a valid email address.');
             }
 
+            // Payment Method Validation
+            if (!selectedPaymentMethod) {
+                showError(null, paymentError, 'Please select a payment method.'); // Show error in payment span
+            }
+
+
             if (!isValid) {
                 const firstErrorElement = document.querySelector('.error-message:not(:empty)');
                 const firstErrorMessage = firstErrorElement ? firstErrorElement.textContent : 'Please fill in all required fields correctly.';
@@ -402,7 +466,7 @@
              }
 
             if (!validateForm()) {
-                return;
+                return; // Validation includes chat_id and payment method checks now
             }
 
             if (!itiInstance) {
@@ -418,16 +482,24 @@
             const email = emailInput.value.trim();
             const fullMobile = itiInstance.getNumber();
 
+            // --- Prepare data for webhook - INCLUDING payment method ---
             const dataToSend = {
                 firstName: firstName,
                 lastName: lastName,
                 mobile: fullMobile,
                 email: email,
+                paymentMethod: selectedPaymentMethod, // Add the selected payment method
                 telegram_chat_id: chatIdFromUrl
             };
 
-            const webhookUrl = "https://n8n.kmonlinesolutions.com/webhook-test/payment-info"; // <--- IMPORTANT: REPLACE THIS
-
+            // --- Define your N8N Webhook URL ---
+            const webhookUrl = "https://n8n.kmonlinesolutions.com/webhook-test/payment-info"; // Set your actual URL
+             if (webhookUrl === "YOUR_N8N_WEBHOOK_URL_HERE") { // Keep check in case URL is accidentally reset
+                 alert('Configuration Error: Webhook URL is not set correctly in the HTML code.');
+                 submitButton.disabled = false;
+                 submitButton.innerHTML = originalButtonHTML;
+                 return;
+            }
 
             try {
                 const response = await fetch(webhookUrl, {
@@ -447,6 +519,9 @@
                     statusMessageDiv.className = 'success';
                     // document.getElementById('subscription-form').reset(); // Optional clear form
                     // if (itiInstance) itiInstance.setNumber(""); // Optional clear phone
+                    // Clear payment selection maybe?
+                    // paymentOptions.forEach(opt => opt.classList.remove('selected'));
+                    // selectedPaymentMethod = null;
                 } else {
                     const responseText = await response.text();
                     console.error("Webhook response error:", response.status, responseText);
