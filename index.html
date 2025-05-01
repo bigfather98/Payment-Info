@@ -12,6 +12,8 @@
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     />
+    <!-- Telegram WebApp Script - RE-ADDED -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
             --primary-color: #09afb8; /* Teal color */
@@ -60,18 +62,17 @@
         h2 {
             font-size: 1.5rem;
             font-weight: 500;
-            margin-bottom: 10px; /* Reduced margin */
+            margin-bottom: 10px;
             text-align: center;
             color: var(--text-color);
         }
 
-        /* Style for displaying selected subscription */
         #subscription-info {
             text-align: center;
             margin-bottom: 20px;
             font-size: 1rem;
             font-weight: 500;
-            color: var(--primary-color); /* Teal color */
+            color: var(--primary-color);
         }
 
         .form-group {
@@ -231,7 +232,6 @@
 
     <div class="form-container" id="main-form-container">
         <h2>Subscription Details</h2>
-        <!-- Element to display the selected subscription type -->
         <p id="subscription-info">Loading subscription details...</p>
 
         <form id="subscription-form" novalidate>
@@ -259,7 +259,6 @@
                  <span class="error-message" id="email-error"></span>
             </div>
 
-            <!-- Payment Method Selection -->
             <div class="form-group">
                 <label>Select Payment Method<span class="required-asterisk">*</span></label>
                 <div class="payment-options-container">
@@ -296,9 +295,19 @@
      ></script>
 
     <script>
+        // --- Attempt to get Telegram WebApp object ---
+        let tg = null; // Initialize tg as null
+        if (window.Telegram && window.Telegram.WebApp) {
+            tg = window.Telegram.WebApp;
+            tg.expand(); // Expand if in Telegram environment
+            console.log("Telegram WebApp environment detected.");
+        } else {
+            console.log("Not running inside Telegram WebApp environment.");
+        }
+
         // --- Global variables ---
         let chatIdFromUrl = null;
-        let subscriptionTypeFromUrl = null; // Variable for subscription type
+        let subscriptionTypeFromUrl = null;
         let selectedPaymentMethod = null;
 
         // --- Elements ---
@@ -310,7 +319,7 @@
         const originalButtonHTML = submitButton.innerHTML;
         const statusMessageDiv = document.getElementById('status-message');
         const paymentOptions = document.querySelectorAll('.payment-option');
-        const subscriptionInfoP = document.getElementById('subscription-info'); // Get the new paragraph
+        const subscriptionInfoP = document.getElementById('subscription-info');
 
         // --- Error Span Elements ---
         const firstNameError = document.getElementById('first-name-error');
@@ -322,7 +331,6 @@
         // --- Variable to hold the intl-tel-input instance ---
         let itiInstance = null;
 
-
         // --- Function to display parameter warnings/info ---
         function checkAndDisplayParams() {
             let paramsOk = true;
@@ -331,7 +339,7 @@
             try {
                 const queryParams = new URLSearchParams(window.location.search);
                 chatIdFromUrl = queryParams.get('chat_id');
-                subscriptionTypeFromUrl = queryParams.get('subscription_type'); // Get subscription type
+                subscriptionTypeFromUrl = queryParams.get('subscription_type');
 
                 if (!chatIdFromUrl) {
                     console.warn("Telegram Chat ID not found in URL.");
@@ -349,26 +357,22 @@
                      subscriptionInfoP.style.color = 'var(--error-color)';
                 } else {
                      console.log("Subscription type found:", subscriptionTypeFromUrl);
-                     // Display the subscription type to the user
-                     let displayText = subscriptionTypeFromUrl.replace('-', ' '); // e.g., "30 days" or "6 months"
+                     let displayText = subscriptionTypeFromUrl.replace('-', ' ');
                      subscriptionInfoP.textContent = `Selected Plan: ${displayText}`;
-                     subscriptionInfoP.style.color = 'var(--primary-color)'; // Reset color if previously error
+                     subscriptionInfoP.style.color = 'var(--primary-color)';
                 }
 
                 if (!paramsOk) {
                     initialWarningMsg += 'Please access this page via the correct Telegram bot button.';
                     statusMessageDiv.textContent = initialWarningMsg;
                     statusMessageDiv.className = 'warning';
-                    // Optionally disable submit button if params are missing
-                    // submitButton.disabled = true;
+                    // submitButton.disabled = true; // Optionally disable
                 } else {
-                     // If params were OK, clear any initial warning that might be there
                      if (statusMessageDiv.classList.contains('warning')) {
                         statusMessageDiv.style.display = 'none';
                         statusMessageDiv.className = '';
                      }
                 }
-
 
             } catch (e) {
                 console.error("Error parsing URL parameters:", e);
@@ -376,15 +380,13 @@
                 statusMessageDiv.className = 'error';
                 subscriptionInfoP.textContent = 'Error loading page details!';
                 subscriptionInfoP.style.color = 'var(--error-color)';
-                submitButton.disabled = true; // Disable submit on critical error
+                submitButton.disabled = true;
                 paramsOk = false;
             }
             return paramsOk;
         }
 
-        // --- Call parameter check on page load ---
         const paramsAreValid = checkAndDisplayParams();
-
 
         // --- Use jQuery's ready function to ensure DOM is ready ---
         $(document).ready(function() {
@@ -425,6 +427,13 @@
                     clearError(null, paymentError);
                 });
             });
+
+             // Call tg.ready() if in Telegram environment AFTER setup
+             if (tg) {
+                 tg.ready();
+                 console.log("Telegram WebApp ready signal sent.");
+             }
+
         }); // <-- End of $(document).ready()
 
         // --- Clear Error Function ---
@@ -435,7 +444,6 @@
             if (inputElement) {
                 inputElement.classList.remove('invalid');
             }
-             // Only clear dynamic success/error messages, not the initial warning
              if (statusMessageDiv.classList.contains('success') || statusMessageDiv.classList.contains('error')) {
                  statusMessageDiv.style.display = 'none';
                  statusMessageDiv.className = '';
@@ -449,9 +457,8 @@
             clearError(lastNameInput, lastNameError);
             clearError(emailInput, emailError);
             clearError(mobileInput, mobileError);
-            clearError(null, paymentError); // Clear payment error span
+            clearError(null, paymentError);
 
-            // Re-check required parameters on submit attempt
             if (!chatIdFromUrl || !subscriptionTypeFromUrl) {
                  alert("Error: Cannot submit form. User or subscription information is missing. Please access this page again via the correct button in your Telegram bot.");
                  submitButton.disabled = true;
@@ -468,7 +475,6 @@
                 }
             }
 
-            // Field validations
             if (!firstNameInput.value.trim()) {
                 showError(firstNameInput, firstNameError, 'First Name is required.');
             }
@@ -494,7 +500,6 @@
                 showError(emailInput, emailError, 'Please enter a valid email address.');
             }
 
-            // Payment Method Validation
             if (!selectedPaymentMethod) {
                 showError(null, paymentError, 'Please select a payment method.');
             }
@@ -510,14 +515,13 @@
 
         // --- Submit Button Event Listener ---
         submitButton.addEventListener('click', async () => {
-            // Clear previous submission status messages
             if (statusMessageDiv.classList.contains('success') || statusMessageDiv.classList.contains('error')) {
                  statusMessageDiv.style.display = 'none';
                  statusMessageDiv.className = '';
              }
 
             if (!validateForm()) {
-                return; // Validation includes chat_id and subscription type checks now
+                return;
             }
 
             if (!itiInstance) {
@@ -533,20 +537,18 @@
             const email = emailInput.value.trim();
             const fullMobile = itiInstance.getNumber();
 
-            // --- Prepare data for webhook - INCLUDING subscription type ---
             const dataToSend = {
                 firstName: firstName,
                 lastName: lastName,
                 mobile: fullMobile,
                 email: email,
                 paymentMethod: selectedPaymentMethod,
-                subscriptionType: subscriptionTypeFromUrl, // Add the captured subscription type
+                subscriptionType: subscriptionTypeFromUrl,
                 telegram_chat_id: chatIdFromUrl
             };
 
-            // --- Define your N8N Webhook URL ---
             const webhookUrl = "https://n8n.kmonlinesolutions.com/webhook-test/payment-info";
-             if (!webhookUrl || webhookUrl === "YOUR_N8N_WEBHOOK_URL_HERE") { // Simplified check
+             if (!webhookUrl || webhookUrl === "YOUR_N8N_WEBHOOK_URL_HERE") {
                  alert('Configuration Error: Webhook URL is not set correctly in the HTML code.');
                  submitButton.disabled = false;
                  submitButton.innerHTML = originalButtonHTML;
@@ -562,6 +564,7 @@
                     body: JSON.stringify(dataToSend),
                 });
 
+                // Reset button before showing feedback or closing
                 submitButton.disabled = false;
                 submitButton.innerHTML = originalButtonHTML;
 
@@ -569,13 +572,31 @@
                     console.log("Submission successful");
                     statusMessageDiv.textContent = 'Your details have been submitted successfully!';
                     statusMessageDiv.className = 'success';
-                    // Optionally clear form/selection
+                    // alert('Your details have been submitted successfully!'); // Optional alert
+
+                    // --- Attempt to close Telegram window ---
+                    if (tg) {
+                        console.log("Attempting to close Telegram WebApp window.");
+                        // Optional: Delay closing slightly to allow user to see success message
+                        setTimeout(() => {
+                            tg.close();
+                        }, 1500); // Close after 1.5 seconds
+                    } else {
+                        console.log("Not in Telegram environment, window will not close automatically.");
+                        // Optionally clear form here if not closing
+                        // document.getElementById('subscription-form').reset();
+                        // if (itiInstance) itiInstance.setNumber("");
+                        // paymentOptions.forEach(opt => opt.classList.remove('selected'));
+                        // selectedPaymentMethod = null;
+                    }
+
                 } else {
                     const responseText = await response.text();
                     console.error("Webhook response error:", response.status, responseText);
                     const displayError = `Failed to submit details (Status: ${response.status}). Please try again later. ${responseText ? '('+responseText.substring(0, 100)+')' : ''}`;
                     statusMessageDiv.textContent = displayError;
                     statusMessageDiv.className = 'error';
+                    // alert(`Submission Error: ${displayError}`); // Optional alert
                 }
             } catch (error) {
                 console.error("Error sending data:", error);
@@ -584,6 +605,7 @@
                  const networkErrorMsg = 'Network Error: Could not connect to the server. Check your connection and try again.';
                  statusMessageDiv.textContent = networkErrorMsg;
                  statusMessageDiv.className = 'error';
+                 // alert(networkErrorMsg); // Optional alert
             }
         });
     </script>
