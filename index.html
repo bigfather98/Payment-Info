@@ -12,7 +12,7 @@
       crossorigin="anonymous"
       referrerpolicy="no-referrer"
     />
-    <!-- Telegram WebApp Script - RE-ADDED -->
+    <!-- Telegram WebApp Script -->
     <script src="https://telegram.org/js/telegram-web-app.js"></script>
     <style>
         :root {
@@ -564,7 +564,7 @@
                     body: JSON.stringify(dataToSend),
                 });
 
-                // Reset button before showing feedback or closing
+                // Reset button before showing feedback
                 submitButton.disabled = false;
                 submitButton.innerHTML = originalButtonHTML;
 
@@ -572,22 +572,31 @@
                     console.log("Submission successful");
                     statusMessageDiv.textContent = 'Your details have been submitted successfully!';
                     statusMessageDiv.className = 'success';
-                    // alert('Your details have been submitted successfully!'); // Optional alert
-
-                    // --- Attempt to close Telegram window ---
-                    if (tg) {
-                        console.log("Attempting to close Telegram WebApp window.");
-                        // Optional: Delay closing slightly to allow user to see success message
+                    
+                    // --- Show Telegram popup and close only after user confirmation ---
+                    if (tg && tg.showPopup) {
+                        console.log("Showing Telegram popup message.");
+                        tg.showPopup({
+                            title: 'Subscription Details Submitted',
+                            message: 'Your details have been successfully submitted. You will receive further instructions shortly.',
+                            buttons: [{
+                                type: 'ok',
+                                text: 'OK'
+                            }]
+                        }, function() {
+                            // This callback runs after user clicks "OK"
+                            console.log("User clicked OK on popup, closing WebApp.");
+                            tg.close();
+                        });
+                    } else if (tg) {
+                        // Fallback if showPopup is not available
+                        alert('Your details have been submitted successfully!');
                         setTimeout(() => {
                             tg.close();
-                        }, 1500); // Close after 1.5 seconds
+                        }, 1000);
                     } else {
-                        console.log("Not in Telegram environment, window will not close automatically.");
-                        // Optionally clear form here if not closing
-                        // document.getElementById('subscription-form').reset();
-                        // if (itiInstance) itiInstance.setNumber("");
-                        // paymentOptions.forEach(opt => opt.classList.remove('selected'));
-                        // selectedPaymentMethod = null;
+                        console.log("Not in Telegram environment, showing standard alert.");
+                        alert('Your details have been submitted successfully!');
                     }
 
                 } else {
@@ -596,16 +605,42 @@
                     const displayError = `Failed to submit details (Status: ${response.status}). Please try again later. ${responseText ? '('+responseText.substring(0, 100)+')' : ''}`;
                     statusMessageDiv.textContent = displayError;
                     statusMessageDiv.className = 'error';
-                    // alert(`Submission Error: ${displayError}`); // Optional alert
+                    
+                    // For errors, also show as popup in Telegram if available
+                    if (tg && tg.showPopup) {
+                        tg.showPopup({
+                            title: 'Submission Error',
+                            message: 'There was a problem submitting your details. Please try again later.',
+                            buttons: [{
+                                type: 'ok',
+                                text: 'OK'
+                            }]
+                        });
+                    } else {
+                        alert(`Submission Error: ${displayError}`);
+                    }
                 }
             } catch (error) {
                 console.error("Error sending data:", error);
-                 submitButton.disabled = false;
-                 submitButton.innerHTML = originalButtonHTML;
-                 const networkErrorMsg = 'Network Error: Could not connect to the server. Check your connection and try again.';
-                 statusMessageDiv.textContent = networkErrorMsg;
-                 statusMessageDiv.className = 'error';
-                 // alert(networkErrorMsg); // Optional alert
+                submitButton.disabled = false;
+                submitButton.innerHTML = originalButtonHTML;
+                const networkErrorMsg = 'Network Error: Could not connect to the server. Check your connection and try again.';
+                statusMessageDiv.textContent = networkErrorMsg;
+                statusMessageDiv.className = 'error';
+                
+                // Network error popup
+                if (tg && tg.showPopup) {
+                    tg.showPopup({
+                        title: 'Network Error',
+                        message: 'Could not connect to the server. Please check your connection and try again.',
+                        buttons: [{
+                            type: 'ok',
+                            text: 'OK'
+                        }]
+                    });
+                } else {
+                    alert(networkErrorMsg);
+                }
             }
         });
     </script>
