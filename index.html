@@ -331,6 +331,23 @@
         // --- Variable to hold the intl-tel-input instance ---
         let itiInstance = null;
 
+        // --- Helper function to display platform-specific alerts ---
+        function showPlatformAlert(message, title = 'Alert') { // title is mostly for showPopup fallback
+            if (tg && tg.showAlert) {
+                tg.showAlert(message);
+            } else if (tg && tg.showPopup) { // Fallback to showPopup if showAlert is not available but showPopup is (less likely)
+                tg.showPopup({
+                    title: title,
+                    message: message,
+                    buttons: [{ type: 'ok', text: 'OK' }]
+                });
+            } else {
+                alert(message); // Standard browser alert as the ultimate fallback
+                console.warn("Telegram WebApp alert/popup not available. Using browser alert for: " + message);
+            }
+        }
+
+
         // --- Function to display parameter warnings/info ---
         function checkAndDisplayParams() {
             let paramsOk = true;
@@ -406,13 +423,13 @@
                 } catch (error) {
                     console.error("Error initializing intl-tel-input:", error);
                     mobileError.textContent = 'Phone input failed to load.';
-                    alert('Error: Could not initialize phone input component. Please reload.');
+                    showPlatformAlert('Error: Could not initialize phone input component. Please reload.', 'Initialization Error');
                     submitButton.disabled = true;
                 }
             } else {
                 console.error("intlTelInput function not found. Check script loading order and network.");
                 mobileError.textContent = 'Phone library failed to load.';
-                alert('Error: Failed to load phone input library. Please check your connection or try again later.');
+                showPlatformAlert('Error: Failed to load phone input library. Please check your connection or try again later.', 'Library Load Error');
                  submitButton.disabled = true;
                  submitButton.textContent = 'Phone input error';
             }
@@ -460,7 +477,7 @@
             clearError(null, paymentError);
 
             if (!chatIdFromUrl || !subscriptionTypeFromUrl) {
-                 alert("Error: Cannot submit form. User or subscription information is missing. Please access this page again via the correct button in your Telegram bot.");
+                 showPlatformAlert("Error: Cannot submit form. User or subscription information is missing. Please access this page again via the correct button in your Telegram bot.", "Form Error");
                  submitButton.disabled = true;
                  return false;
             }
@@ -507,7 +524,7 @@
             if (!isValid) {
                 const firstErrorElement = document.querySelector('.error-message:not(:empty)');
                 const firstErrorMessage = firstErrorElement ? firstErrorElement.textContent : 'Please fill in all required fields correctly.';
-                alert(`Validation Error: ${firstErrorMessage}`);
+                showPlatformAlert(`Validation Error: ${firstErrorMessage}`, 'Validation Error');
             }
 
             return isValid;
@@ -525,7 +542,7 @@
             }
 
             if (!itiInstance) {
-                 alert('Error: Phone input component is not ready. Please wait or reload.');
+                 showPlatformAlert('Error: Phone input component is not ready. Please wait or reload.', 'Component Error');
                 return;
             }
 
@@ -548,8 +565,8 @@
             };
 
             const webhookUrl = "https://n8n.kmonlinesolutions.com/webhook/payment-info";
-             if (!webhookUrl || webhookUrl === "YOUR_N8N_WEBHOOK_URL_HERE") {
-                 alert('Configuration Error: Webhook URL is not set correctly in the HTML code.');
+             if (!webhookUrl || webhookUrl === "YOUR_N8N_WEBHOOK_URL_HERE") { // Keep this check simple
+                 showPlatformAlert('Configuration Error: Webhook URL is not set correctly in the HTML code.', 'Configuration Error');
                  submitButton.disabled = false;
                  submitButton.innerHTML = originalButtonHTML;
                  return;
@@ -573,30 +590,28 @@
                     statusMessageDiv.textContent = 'Your details have been submitted successfully!';
                     statusMessageDiv.className = 'success';
                     
-                    // --- Show Telegram popup and close only after user confirmation ---
+                    const successMessage = 'Your details have been successfully submitted. You will receive further instructions shortly.';
+                    const successTitle = 'Subscription Details Submitted';
+                    const closeWebAppCallback = function() {
+                        if (tg) {
+                            console.log("Alert/Popup OK'd, closing WebApp.");
+                            tg.close();
+                        }
+                    };
+
                     if (tg && tg.showPopup) {
-                        console.log("Showing Telegram popup message.");
+                        console.log("Showing Telegram popup message for success.");
                         tg.showPopup({
-                            title: 'Subscription Details Submitted',
-                            message: 'Your details have been successfully submitted. You will receive further instructions shortly.',
-                            buttons: [{
-                                type: 'ok',
-                                text: 'OK'
-                            }]
-                        }, function() {
-                            // This callback runs after user clicks "OK"
-                            console.log("User clicked OK on popup, closing WebApp.");
-                            tg.close();
-                        });
-                    } else if (tg) {
-                        // Fallback if showPopup is not available
-                        alert('Your details have been submitted successfully!');
-                        setTimeout(() => {
-                            tg.close();
-                        }, 1000);
-                    } else {
-                        console.log("Not in Telegram environment, showing standard alert.");
-                        alert('Your details have been submitted successfully!');
+                            title: successTitle,
+                            message: successMessage,
+                            buttons: [{ type: 'ok', text: 'OK' }]
+                        }, closeWebAppCallback);
+                    } else { // Fallback for general alert (includes tg.showAlert or browser alert)
+                        showPlatformAlert(successMessage, successTitle); // No callback needed here as per simpler showPlatformAlert
+                        // If tg is available, close after a delay
+                        if (tg) {
+                           setTimeout(closeWebAppCallback, 1000); // Keep a delay for visibility
+                        }
                     }
 
                 } else {
@@ -606,18 +621,17 @@
                     statusMessageDiv.textContent = displayError;
                     statusMessageDiv.className = 'error';
                     
-                    // For errors, also show as popup in Telegram if available
+                    const errorTitle = 'Submission Error';
+                    const errorMessagePopup = 'There was a problem submitting your details. Please try again later.';
+
                     if (tg && tg.showPopup) {
                         tg.showPopup({
-                            title: 'Submission Error',
-                            message: 'There was a problem submitting your details. Please try again later.',
-                            buttons: [{
-                                type: 'ok',
-                                text: 'OK'
-                            }]
+                            title: errorTitle,
+                            message: errorMessagePopup,
+                            buttons: [{ type: 'ok', text: 'OK' }]
                         });
                     } else {
-                        alert(`Submission Error: ${displayError}`);
+                        showPlatformAlert(errorMessagePopup, errorTitle);
                     }
                 }
             } catch (error) {
@@ -628,18 +642,15 @@
                 statusMessageDiv.textContent = networkErrorMsg;
                 statusMessageDiv.className = 'error';
                 
-                // Network error popup
+                const networkErrorTitle = 'Network Error';
                 if (tg && tg.showPopup) {
                     tg.showPopup({
-                        title: 'Network Error',
-                        message: 'Could not connect to the server. Please check your connection and try again.',
-                        buttons: [{
-                            type: 'ok',
-                            text: 'OK'
-                        }]
+                        title: networkErrorTitle,
+                        message: networkErrorMsg,
+                        buttons: [{ type: 'ok', text: 'OK' }]
                     });
                 } else {
-                    alert(networkErrorMsg);
+                    showPlatformAlert(networkErrorMsg, networkErrorTitle);
                 }
             }
         });
