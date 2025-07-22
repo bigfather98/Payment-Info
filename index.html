@@ -433,11 +433,6 @@
                 return;
             }
 
-            if (!itiInstance) {
-                 showPlatformAlert('Error: Phone input component is not ready. Please wait or reload.', 'Component Error');
-                return;
-            }
-
             submitButton.disabled = true;
             submitButton.innerHTML = `<span class="spinner"></span> Processing...`;
 
