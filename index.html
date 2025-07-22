@@ -92,31 +92,11 @@
             margin-left: 4px;
         }
 
-        input[type="text"],
-        input[type="email"],
-        input[type="tel"] {
-            width: 100%;
-            padding: 12px 15px;
-            font-size: 1rem;
-            border: 1px solid var(--input-border-color);
-            border-radius: 5px;
-            transition: border-color 0.2s ease-in-out, box-shadow 0.2s ease-in-out;
-        }
-
-        .intl-tel-input {
-            width: 100%;
-        }
-
         input:focus {
             border-color: var(--primary-color);
             outline: none;
             box-shadow: 0 0 0 2px rgba(9, 175, 184, 0.25);
         }
-
-         .intl-tel-input.iti-focused .form-control {
-             border-color: var(--primary-color) !important;
-             box-shadow: 0 0 0 2px rgba(9, 175, 184, 0.25) !important;
-         }
 
         .payment-options-container {
             display: flex;
@@ -234,31 +214,6 @@
         <h2>Subscription Details</h2>
         <p id="subscription-info">Loading subscription details...</p>
 
-        <form id="subscription-form" novalidate>
-            <div class="form-group">
-                <label for="first-name">First Name<span class="required-asterisk">*</span></label>
-                <input type="text" id="first-name" name="firstName" placeholder="Enter your first name" required>
-                <span class="error-message" id="first-name-error"></span>
-            </div>
-
-            <div class="form-group">
-                <label for="last-name">Last Name<span class="required-asterisk">*</span></label>
-                <input type="text" id="last-name" name="lastName" placeholder="Enter your last name" required>
-                 <span class="error-message" id="last-name-error"></span>
-            </div>
-
-            <div class="form-group">
-                <label for="mobile-input">Mobile Number<span class="required-asterisk">*</span></label>
-                <input type="tel" id="mobile-input" name="mobileNumber" required>
-                <span class="error-message" id="mobile-error"></span>
-            </div>
-
-            <div class="form-group">
-                <label for="email">Email<span class="required-asterisk">*</span></label>
-                <input type="email" id="email" name="email" placeholder="Enter your email address" required>
-                 <span class="error-message" id="email-error"></span>
-            </div>
-
             <div class="form-group">
                 <label>Select Payment Method<span class="required-asterisk">*</span></label>
                 <div class="payment-options-container">
@@ -311,10 +266,6 @@
         let selectedPaymentMethod = null;
 
         // --- Elements ---
-        const firstNameInput = document.getElementById('first-name');
-        const lastNameInput = document.getElementById('last-name');
-        const emailInput = document.getElementById('email');
-        const mobileInput = document.getElementById('mobile-input');
         const submitButton = document.getElementById('submit');
         const originalButtonHTML = submitButton.innerHTML;
         const statusMessageDiv = document.getElementById('status-message');
@@ -322,10 +273,6 @@
         const subscriptionInfoP = document.getElementById('subscription-info');
 
         // --- Error Span Elements ---
-        const firstNameError = document.getElementById('first-name-error');
-        const lastNameError = document.getElementById('last-name-error');
-        const emailError = document.getElementById('email-error');
-        const mobileError = document.getElementById('mobile-error');
         const paymentError = document.getElementById('payment-error');
 
         // --- Variable to hold the intl-tel-input instance ---
@@ -407,33 +354,6 @@
 
         // --- Use jQuery's ready function to ensure DOM is ready ---
         $(document).ready(function() {
-            // Initialize intl-tel-input
-            if (typeof window.intlTelInput === 'function') {
-                try {
-                    itiInstance = window.intlTelInput(mobileInput, {
-                        initialCountry: "ph",
-                        separateDialCode: true,
-                        utilsScript: "https://cdnjs.cloudflare.com/ajax/libs/intl-tel-input/17.0.13/js/utils.js",
-                        preferredCountries: ['ph', 'us', 'gb', 'au', 'sg', 'ae'],
-                        nationalMode: false,
-                        placeholderNumberType: "MOBILE",
-                        autoPlaceholder: "polite"
-                    });
-                    console.log("intl-tel-input initialized successfully.");
-                } catch (error) {
-                    console.error("Error initializing intl-tel-input:", error);
-                    mobileError.textContent = 'Phone input failed to load.';
-                    showPlatformAlert('Error: Could not initialize phone input component. Please reload.', 'Initialization Error');
-                    submitButton.disabled = true;
-                }
-            } else {
-                console.error("intlTelInput function not found. Check script loading order and network.");
-                mobileError.textContent = 'Phone library failed to load.';
-                showPlatformAlert('Error: Failed to load phone input library. Please check your connection or try again later.', 'Library Load Error');
-                 submitButton.disabled = true;
-                 submitButton.textContent = 'Phone input error';
-            }
-
             // Add click listeners for payment options
             paymentOptions.forEach(option => {
                 option.addEventListener('click', function() {
@@ -470,10 +390,6 @@
         // --- Validation Function ---
         function validateForm() {
             let isValid = true;
-            clearError(firstNameInput, firstNameError);
-            clearError(lastNameInput, lastNameError);
-            clearError(emailInput, emailError);
-            clearError(mobileInput, mobileError);
             clearError(null, paymentError);
 
             if (!chatIdFromUrl || !subscriptionTypeFromUrl) {
@@ -492,30 +408,6 @@
                 }
             }
 
-            if (!firstNameInput.value.trim()) {
-                showError(firstNameInput, firstNameError, 'First Name is required.');
-            }
-            if (!lastNameInput.value.trim()) {
-                showError(lastNameInput, lastNameError, 'Last Name is required.');
-            }
-
-            const mobileNumberValue = mobileInput.value.trim();
-            if (!itiInstance) {
-                showError(mobileInput, mobileError, 'Phone input component not loaded.');
-            } else if (!mobileNumberValue) {
-                 showError(mobileInput, mobileError, 'Mobile Number is required.');
-             } else if (!itiInstance.isValidNumber()) {
-                const errorCode = itiInstance.getValidationError();
-                const errorMap = ["Invalid number", "Invalid country code", "Too short", "Too long", "Invalid number"];
-                const message = errorMap[errorCode] || "Invalid mobile number format.";
-                showError(mobileInput, mobileError, message);
-             }
-
-            if (!emailInput.value.trim()) {
-                showError(emailInput, emailError, 'Email is required.');
-            } else if (!/\S+@\S+\.\S+/.test(emailInput.value.trim())) {
-                showError(emailInput, emailError, 'Please enter a valid email address.');
-            }
 
             if (!selectedPaymentMethod) {
                 showError(null, paymentError, 'Please select a payment method.');
@@ -549,16 +441,7 @@
             submitButton.disabled = true;
             submitButton.innerHTML = `<span class="spinner"></span> Processing...`;
 
-            const firstName = firstNameInput.value.trim();
-            const lastName = lastNameInput.value.trim();
-            const email = emailInput.value.trim();
-            const fullMobile = itiInstance.getNumber();
-
             const dataToSend = {
-                firstName: firstName,
-                lastName: lastName,
-                mobile: fullMobile,
-                email: email,
                 paymentMethod: selectedPaymentMethod,
                 subscriptionType: subscriptionTypeFromUrl,
                 telegram_chat_id: chatIdFromUrl
